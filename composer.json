@@ -1,0 +1,16 @@
+{
+  "require": {
+    "slim/slim": "^4.14",
+    "slim/psr7": "^1.7",
+    "vlucas/phpdotenv": "^5.6",
+    "phpmailer/phpmailer": "^6.10",
+    "resend/resend-php": "^0.18.0"
+  },
+  "scripts": {
+    "serve": [
+      "php -S localhost:8085 -t public",
+      "Composer\\Config::disableProcessTimeout",
+      "phpunit"
+    ]
+  }
+}

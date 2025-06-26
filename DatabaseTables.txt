@@ -1,0 +1,160 @@
+User Roles & Functional Modules
+
+Lecturer:
+- Secure Login
+- Manage Student Records (Add/Edit/Delete)
+- Create/Edit Continuous Assessment Components (Quiz, Assignment, Exercises, Labs, Test1, etc.)
+- Final Exam Entry (30%)
+- Auto-calculation of total (70% + 30%)
+- Visual Analytics and CSV Export
+- Notify Students
+
+Student:
+- Login with Matric Number and PIN
+- View all marks and breakdown
+- Compare with coursemates
+- Class rank and percentile
+- Simulate marks
+- Submit remark requests
+
+Academic Advisor:
+- Secure Login
+- View advisees' full academic breakdown
+- Identify at-risk students
+- Add notes and export reports
+
+Admin:
+- Manage user accounts and roles
+- Assign lecturers to courses
+- View logs
+- Reset passwords
+
+Database Design (MySQL)
+Summary of tables to be created in phpMyAdmin:
+•	- users
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  role ENUM('lecturer', 'student', 'advisor', 'admin') NOT NULL,
+  name VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  matric_no VARCHAR(20) UNIQUE, -- for students
+  password_hash VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+•	- courses
+CREATE TABLE courses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(20),
+  title VARCHAR(100),
+  lecturer_id INT,
+  FOREIGN KEY (lecturer_id) REFERENCES users(id)
+);
+•	- enrollments
+CREATE TABLE enrollments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  course_id INT,
+  FOREIGN KEY (student_id) REFERENCES users(id),
+  FOREIGN KEY (course_id) REFERENCES courses(id)
+);
+•	- components
+CREATE TABLE components (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  course_id INT,
+  name VARCHAR(50),
+  weight DECIMAL(5,2),
+  max_mark DECIMAL(5,2),
+  FOREIGN KEY (course_id) REFERENCES courses(id)
+);
+•	- marks
+CREATE TABLE marks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  component_id INT,
+  student_id INT,
+  mark_obtained DECIMAL(5,2),
+  FOREIGN KEY (component_id) REFERENCES components(id),
+  FOREIGN KEY (student_id) REFERENCES users(id)
+);
+•	- final_exams
+CREATE TABLE final_exams (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  course_id INT,
+  mark DECIMAL(5,2),
+  FOREIGN KEY (student_id) REFERENCES users(id),
+  FOREIGN KEY (course_id) REFERENCES courses(id)
+);
+•	- advisees
+CREATE TABLE advisees (
+  advisor_id INT,
+  student_id INT,
+  FOREIGN KEY (advisor_id) REFERENCES users(id),
+  FOREIGN KEY (student_id) REFERENCES users(id),
+  PRIMARY KEY (advisor_id, student_id)
+);
+•	- remark_requests
+CREATE TABLE remark_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  course_id INT,
+  component_id INT,
+  justification TEXT,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (student_id) REFERENCES users(id),
+  FOREIGN KEY (course_id) REFERENCES courses(id),
+  FOREIGN KEY (component_id) REFERENCES components(id)
+);
+Backend API Routes (PHP Slim)
+Grouped by user role:
+•	Lecturer
+•	POST /login
+•	GET /lecturer/courses
+•	POST /lecturer/course
+•	GET /lecturer/course/{id}/students
+•	POST /lecturer/course/{id}/component
+•	PUT /lecturer/component/{id}
+•	POST /lecturer/component/{id}/mark
+•	POST /lecturer/course/{id}/final-exam
+•	GET /lecturer/course/{id}/analytics
+•	GET /lecturer/course/{id}/export
+•	Student
+•	POST /student/login
+•	GET /student/dashboard
+•	GET /student/course/{id}/simulate
+•	GET /student/course/{id}/rank
+•	POST /student/course/{id}/remark
+•	Advisor
+•	POST /advisor/login
+•	GET /advisor/advisees
+•	GET /advisor/student/{id}
+•	POST /advisor/student/{id}/note
+•	GET /advisor/export
+•	Admin
+•	POST /admin/login
+•	GET /admin/users
+•	POST /admin/user
+•	PUT /admin/user/{id}
+•	POST /admin/assign-lecturer
+
+Frontend Pages (Vue.js)
+•	- LoginPage.vue – Common login for all users
+•	- LecturerDashboard.vue – Manage students, components, marks
+•	- StudentDashboard.vue – View marks, simulate scores
+•	- AdvisorDashboard.vue – Advisee analytics and monitoring
+•	- AdminPanel.vue – Manage users and roles
+•	- CourseAnalytics.vue – Visual charts and data
+•	- ExportResults.vue – CSV export logic
+•	- RemarkRequests.vue – Remark management
+
+Development Plan
+
+1. Backend First:
+   - Set up PHP Slim, configure MySQL.
+   - Implement authentication and core CRUD APIs.
+2. Frontend:
+   - Vue CLI setup with Axios for API calls.
+   - Token storage and role-based dashboards.
+3. Testing:
+   - Postman for backend, dummy data for roles.
+
